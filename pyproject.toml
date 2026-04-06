@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=77.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dirim-lensing"
+version = "0.0.1"
+authors = [
+  { name="Guillaume Payeur", email="guillaume.payeur@umontreal.ca" },
+]
+description = "Joint posterior inference of pixelated sources and foreground mass distributions in strong gravitational lenses using diffusion and recurrent inference machines"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "torch>=2.2",
+  "numpy>=1.24",
+  "pydantic>=1.10,<2.0",
+  "caustics",
+]
+
+[project.optional-dependencies]
+scripts = [
+  "h5py>=3.10",
+  "matplotlib>=3.8",
+  "PyYAML>=6.0",
+  "scipy>=1.11",
+  "tarp",
+  "torch-ema>=0.3",
+  "tqdm>=4.66",
+]
+
+classifiers = [
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+license = { text = "MIT" }
+
+[project.urls]
+Homepage = "https://github.com/guillaumepayeur/DiRIM_Lensing"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dirim_lensing*"]
