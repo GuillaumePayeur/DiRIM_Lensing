@@ -107,6 +107,11 @@ def main(config):
     
     # Sampling loop
     print("Starting sampling...")
+    test_iter = iter(test_loader)
+
+    def get_next_test_sample():
+        return next(test_iter)
+
     # Arrays to hold samples
     s_samples_all = torch.empty(config.tarp.n_samples, config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
     k_samples_all = torch.empty(config.tarp.n_samples, config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
@@ -115,7 +120,7 @@ def main(config):
     k_theta = torch.empty(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
     for i in tqdm.tqdm(range(config.tarp.n_sims), desc="Generating samples"):
         # Get test examples from the loader
-        s0, k0 = next(iter(test_loader))
+        s0, k0 = get_next_test_sample()
         s_theta[i] = s0
         k_theta[i] = k0
         # Clean source and kappa map
@@ -135,7 +140,7 @@ def main(config):
     k_references = torch.empty(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
     for i in range(config.tarp.n_sims):
         # Get test examples from the loader
-        s0, k0 = next(iter(test_loader))
+        s0, k0 = get_next_test_sample()
         s_references[i] = s0
         k_references[i] = k0
 
