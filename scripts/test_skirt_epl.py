@@ -351,7 +351,11 @@ class Kappa_Fitter:
         return self.angle_wrapping(params_all) 
         
 
-def size(s, moment, source_pixelscale):
+# function that compute the size of a source
+
+def size(s, m, source_pixelscale, sigma_y):
+    # Set all pixels below sigma_y to zero
+    s[s < sigma_y] = 0
     # Normalize the image so that the sum of pixel values is 1
     sum = torch.sum(s, dim=(2,3), keepdim=True)   
     s = s/sum
@@ -363,8 +367,8 @@ def size(s, moment, source_pixelscale):
     X, Y = torch.meshgrid(x, x, indexing='xy')
     X = X.to(s.device)
     Y = Y.to(s.device)
-    size2 = torch.sum(s * (torch.abs((X.unsqueeze(0).unsqueeze(0) - mean_x.unsqueeze(2).unsqueeze(3))**moment) + torch.abs((Y.unsqueeze(0).unsqueeze(0) - mean_y.unsqueeze(2).unsqueeze(3))**moment)), dim=(1,2,3))
-    size = size2**(1/moment)*source_pixelscale 
+    size_m = torch.sum(s * (torch.abs((X.unsqueeze(0).unsqueeze(0) - mean_x.unsqueeze(2).unsqueeze(3))**m) + torch.abs((Y.unsqueeze(0).unsqueeze(0) - mean_y.unsqueeze(2).unsqueeze(3))**m)), dim=(1,2,3))
+    size = size_m**(1/m)*source_pixelscale 
     return size      
 
 def main(config):
@@ -458,7 +462,7 @@ def main(config):
         # Generating noiseless lensed image
         y_noiseless = lensingmodel.simulate_lensing(s0, rim.rim_to_caustics(k0), noise=False)
         # Computing source size
-        s0_size = size(s0.unsqueeze(0), 1, config.skirt_epl_dataset.source_pixelscale)
+        s0_size = size(s0.unsqueeze(0), 1, config.skirt_epl_dataset.source_pixelscale, config.skirt_epl_dataset.sigma_y)
         # Arrays to hold the samples and other information
         s_samples = torch.empty(n_samples, config.dataset.res, config.dataset.res)
         k_samples = torch.empty(n_samples, config.dataset.res, config.dataset.res)
@@ -475,7 +479,7 @@ def main(config):
             # Fitting lens parameters
             k_params_samples_batch = fitter.fit_kappa_twoshot(k_samples_batch, batch_size=config.tests.batch_size, lr=0.05, num_walkers_1=500, num_steps_1=500, num_walkers_2=500, num_steps_2=500)
             # Computing source size
-            s_size_samples_batch = size(s_samples_batch, 1, config.skirt_epl_dataset.source_pixelscale)
+            s_size_samples_batch = size(s_samples_batch, 1, config.skirt_epl_dataset.source_pixelscale, config.skirt_epl_dataset.sigma_y)
             # Filling in arrays
             s_samples[i*config.tests.batch_size:(i+1)*config.tests.batch_size] = s_samples_batch[:,0,:,:]
             k_samples[i*config.tests.batch_size:(i+1)*config.tests.batch_size] = k_samples_batch[:,0,:,:]
@@ -491,7 +495,7 @@ def main(config):
             # Fitting lens parameters
             k_params_samples_batch = fitter.fit_kappa_twoshot(k_samples_batch, batch_size=config.tests.batch_size, lr=0.05, num_walkers_1=500, num_steps_1=500, num_walkers_2=500, num_steps_2=500)
             # Computing source size
-            s_size_samples_batch = size(s_samples_batch, 1, config.skirt_epl_dataset.source_pixelscale)   
+            s_size_samples_batch = size(s_samples_batch, 1, config.skirt_epl_dataset.source_pixelscale, config.skirt_epl_dataset.sigma_y)   
             # Filling in arrays
             s_samples[n_samples // config.tests.batch_size * config.tests.batch_size:] = s_samples_batch[:,0,:,:]
             k_samples[n_samples // config.tests.batch_size * config.tests.batch_size:] = k_samples_batch[:,0,:,:]
