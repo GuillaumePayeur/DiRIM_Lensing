@@ -6,6 +6,7 @@ import os
 from scipy import stats
 import torch
 import warnings
+import h5py
 
 from dirim_lensing import Config
 from dirim_lensing import LensingModel
@@ -15,6 +16,16 @@ from dirim_lensing import Sampler
 from dirim_lensing import load_datasets
 from train_rim import load_unet
 from test_sample import plot_sampling
+
+def save_h5(s, k, y, y_noiseless, s_samples, k_samples, y_samples, model_name):
+    with h5py.File(f'./results/test_ood_source/{model_name}.h5', 'w') as f:
+        f.create_dataset('s', data=s.cpu().numpy())
+        f.create_dataset('k', data=k.cpu().numpy())
+        f.create_dataset('y', data=y.cpu().numpy())
+        f.create_dataset('y_noiseless', data=y_noiseless.cpu().numpy())
+        f.create_dataset('s_samples', data=s_samples.cpu().numpy())
+        f.create_dataset('k_samples', data=k_samples.cpu().numpy())
+        f.create_dataset('y_samples', data=y_samples.cpu().numpy())
 
 def plot_sampling(s0, k0, y, s_samples, k_samples, y_noiseless, y_hat, 
                   model_name, config, sigma_y, num_images=5):
@@ -234,6 +245,9 @@ def main(config):
     print("Sampling completed. Generating plots...")
     plot_sampling(s0, k0, y, s_samples, k_samples, y_noiseless, y_hat, 
                   model_name, config, sigma_y, num_images=batch_size) 
+
+    # Saving results as h5 file
+    save_h5(s0, k0, y, y_noiseless, s_samples, k_samples, y_hat, model_name)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
