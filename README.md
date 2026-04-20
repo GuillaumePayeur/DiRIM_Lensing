@@ -7,7 +7,7 @@ DiRIM_Lensing models strong gravitational lenses by combining denoising diffusio
 
 **Authors:** Guillaume Payeur, Laurence Perreault-Levasseur, Gabriel Missael Barco, Yashar Hezaveh
 
-![DiRIM lens reconstructions](results/summary.gif)
+![DiRIM lens model](summary.gif)
 
 ## Why This Repository Exists
 
