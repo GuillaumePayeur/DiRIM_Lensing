@@ -80,6 +80,7 @@ def main(config):
          ) = load_datasets(save_path = config.skirt_tng_dataset.save_path, 
                            batch_size = 1,
                            augment=False)
+        test_observations = torch.load(os.path.join(config.skirt_tng_dataset.save_path, 'observations_test.pt'))
 
     # Extracting model name
     model_name = sys.argv[1].split('config_')[1].replace('.yaml', '')
@@ -142,8 +143,8 @@ def main(config):
         k0 = k0.to(rim.device).float()
         # Converting kappa map to RIM units
         k0 = rim.caustics_to_rim(k0)
-        # Generating lensed image
-        _, _, _, y = rim.generate_batch(s0=s0, k0=k0)
+        # Get lensed image from test set
+        y = test_observations[idx].to(rim.device)
         # Generating noiseless lensed image
         y_noiseless = lensingmodel.simulate_lensing(s0, rim.rim_to_caustics(k0), noise=False)
         # Arrays to hold the samples and other information

@@ -378,6 +378,7 @@ def main(config):
          ) = load_datasets(save_path = config.skirt_epl_dataset.save_path, 
                            batch_size = 1,
                            augment=False)
+        test_observations = torch.load(os.path.join(config.skirt_epl_dataset.save_path, 'observations_test.pt'))
 
     # Load test set lens parameters
     test_k_params = torch.load(config.skirt_epl_dataset.save_path + '/kappa_params_test.pt')
@@ -457,8 +458,8 @@ def main(config):
         k0 = k0.to(rim.device).float()
         # Converting kappa map to RIM units
         k0 = rim.caustics_to_rim(k0)
-        # Generating lensed image
-        _, _, _, y = rim.generate_batch(s0=s0, k0=k0)
+        # Get lensed image from test set
+        y = test_observations[idx].to(rim.device)
         # Generating noiseless lensed image
         y_noiseless = lensingmodel.simulate_lensing(s0, rim.rim_to_caustics(k0), noise=False)
         # Computing source size

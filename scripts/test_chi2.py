@@ -28,11 +28,13 @@ def main(config):
          ) = load_datasets(save_path = config.skirt_epl_dataset.save_path, 
                            batch_size = 128,
                            augment = False)
+        test_observations = torch.load(os.path.join(config.skirt_epl_dataset.save_path, 'observations_test.pt'))
     elif config.dataset.name == 'SKIRT_TNG':
         (_, _, _, _, _, test_loader
          ) = load_datasets(save_path = config.skirt_tng_dataset.save_path, 
                            batch_size = 128,
                            augment = False)
+        test_observations = torch.load(os.path.join(config.skirt_tng_dataset.save_path, 'observations_test.pt'))
         
     # Extracting model name
     model_name = sys.argv[1].split('config_')[1].replace('.yaml', '')
@@ -107,8 +109,9 @@ def main(config):
         k0 = k0.to(rim.device).float()
         # Converting kappa map to RIM units
         k0 = rim.caustics_to_rim(k0)
-        # Generating lensed image
-        _, _, _, y = rim.generate_batch(s0=s0, k0=k0)
+        # Get lensed image from test set
+        batch_size = s0.shape[0]
+        y = test_observations[idx:idx + batch_size].to(rim.device)
         # Sampling from the model
         s_samples, k_samples = sampler.sample_PC(y, num_samples=1)
         # Generating lensed image and lensed image reconstructions
@@ -119,7 +122,6 @@ def main(config):
         sigma_y = lensingmodel.sigma_y
         chi2 = torch.sum((y - y_hat)**2, dim=[1, 2, 3]) / sigma_y**2
         # Storing chi2 values
-        batch_size = chi2.shape[0]
         chi2_values[idx:idx + batch_size] = chi2.cpu()
         idx += batch_size
 

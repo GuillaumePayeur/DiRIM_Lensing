@@ -220,6 +220,7 @@ def main(config):
          ) = load_datasets(save_path = config.skirt_tng_dataset.save_path, 
                            batch_size = 1,
                            augment=False)
+        test_observations = torch.load(os.path.join(config.skirt_tng_dataset.save_path, 'observations_test.pt'))
 
     # Extracting model name
     model_name = sys.argv[1].split('config_')[1].replace('.yaml', '')
@@ -271,8 +272,8 @@ def main(config):
         k0 = k0.to(rim.device).float()
         # Converting kappa map to RIM units
         k0 = rim.caustics_to_rim(k0)
-        # Generating lensed image
-        _, _, _, y = rim.generate_batch(s0=s0, k0=k0)
+        # Get lensed image from test set
+        y = test_observations[idx].to(rim.device)
 
         # Initialize the macromodel fitter
         fitter = Macromodel_Fitter(res=config.dataset.res, 
@@ -290,7 +291,7 @@ def main(config):
                                 lim_high_phy=torch.tensor([float('inf'), float('inf'), 1.0, float('inf'), float('inf'), float('inf'), float('inf'), float('inf'), float('inf'), float('inf'), float('inf'), float('inf')]))        
 
         # Fitting the macromodel parameters
-        params_fit = fitter.fit_oneshot(obs_true=y, source=s0, lr=0.05, num_walkers=100, num_steps=100)
+        params_fit = fitter.fit_oneshot(obs_true=y, source=s0, lr=0.05, num_walkers=1000, num_steps=1000)
         fit = fitter.forward(params_fit.to('cuda'), fitter.make_simulator(), s0).detach().cpu().numpy().reshape(config.dataset.res, config.dataset.res)
         params_fit = params_fit.detach().cpu().numpy().reshape(-1)
 

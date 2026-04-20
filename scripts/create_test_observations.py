@@ -13,39 +13,18 @@ from dirim_lensing import Sampler
 from dirim_lensing import load_datasets
 from train_rim import load_unet
 
-def save_samples(s_samples_all, k_samples_all, s_theta, k_theta, s_references, k_references, 
-                 model_name, config):
-    # Converting to numpy arrays and reshaping
-    s_samples_all = s_samples_all.numpy().reshape(config.tarp.n_sims, config.tarp.n_samples, 1, config.dataset.res, config.dataset.res)
-    k_samples_all = k_samples_all.numpy().reshape(config.tarp.n_sims, config.tarp.n_samples, 1, config.dataset.res, config.dataset.res)
-    s_theta = s_theta.numpy().reshape(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    k_theta = k_theta.numpy().reshape(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    s_references = s_references.numpy().reshape(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    k_references = k_references.numpy().reshape(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    # Saving the samples
-    os.makedirs('./results/tarp_samples', exist_ok=True)
-    np.save(f'./results/tarp_samples/s_samples_{model_name}.npy', s_samples_all)
-    np.save(f'./results/tarp_samples/k_samples_{model_name}.npy', k_samples_all)
-    np.save(f'./results/tarp_samples/s_theta_{model_name}.npy', s_theta)
-    np.save(f'./results/tarp_samples/k_theta_{model_name}.npy', k_theta)
-    np.save(f'./results/tarp_samples/s_references_{model_name}.npy', s_references)
-    np.save(f'./results/tarp_samples/k_references_{model_name}.npy', k_references)
-    print("Samples saved successfully.")
-
 def main(config):
     # Load datasets
     if config.dataset.name == 'SKIRT_EPL':
         (_, _, _, _, _, test_loader
          ) = load_datasets(save_path = config.skirt_epl_dataset.save_path, 
-                           batch_size = 1,
+                           batch_size = 128,
                            augment = False)
-        test_observations = torch.load(os.path.join(config.skirt_epl_dataset.save_path, 'observations_test.pt'))
     elif config.dataset.name == 'SKIRT_TNG':
         (_, _, _, _, _, test_loader
          ) = load_datasets(save_path = config.skirt_tng_dataset.save_path, 
-                           batch_size = 1,
+                           batch_size = 128,
                            augment = False)
-        test_observations = torch.load(os.path.join(config.skirt_tng_dataset.save_path, 'observations_test.pt'))
         
     # Extracting model name
     model_name = sys.argv[1].split('config_')[1].replace('.yaml', '')
@@ -108,47 +87,32 @@ def main(config):
                       snr = config.sampling.snr)
     
     # Sampling loop
-    print("Starting sampling...")
-    test_iter = iter(test_loader)
+    print("Creating test set observations...")
+    
+    # Tensor to hold observations
+    y_all = torch.empty(len(test_loader.dataset), 1, config.dataset.res, config.dataset.res)
+    idx = 0
 
-    def get_next_test_sample():
-        return next(test_iter)
-
-    # Arrays to hold samples
-    s_samples_all = torch.empty(config.tarp.n_samples, config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    k_samples_all = torch.empty(config.tarp.n_samples, config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    # Arrays to hold true values (theta in tarp)
-    s_theta = torch.empty(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    k_theta = torch.empty(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    for i in tqdm.tqdm(range(config.tarp.n_sims), desc="Generating samples"):
-        # Get test examples from the loader
-        s0, k0 = get_next_test_sample()
-        s_theta[i] = s0
-        k_theta[i] = k0
+    for s0, k0 in tqdm.tqdm(test_loader, desc="Generating observations"):
         # Clean source and kappa map
         s0 = s0.to(rim.device).float()
         k0 = k0.to(rim.device).float()
         # Converting kappa map to RIM units
         k0 = rim.caustics_to_rim(k0)
-        # Get lensed image from test set    
-        y = test_observations[i].to(rim.device)
-        # Sampling from the model
-        s_samples, k_samples = sampler.sample_PC(y, num_samples=config.tarp.n_samples)
-        k_samples = rim.rim_to_caustics(k_samples)
-        s_samples_all[:,i] = s_samples[:,0].cpu()
-        k_samples_all[:,i] = k_samples[:,0].cpu()
-    # Arrays to hold tarp reference values
-    s_references = torch.empty(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    k_references = torch.empty(config.tarp.n_sims, 1, config.dataset.res, config.dataset.res)
-    for i in range(config.tarp.n_sims):
-        # Get test examples from the loader
-        s0, k0 = get_next_test_sample()
-        s_references[i] = s0
-        k_references[i] = k0
+        # Generating lensed image
+        _, _, _, y = rim.generate_batch(s0=s0, k0=k0)
+        # Storing the observation
+        y_all[idx:idx + y.shape[0]] = y
+        idx += y.shape[0]
 
-    print("Sampling completed. Saving results...")
-    save_samples(s_samples_all, k_samples_all, s_theta, k_theta, s_references, k_references, 
-                 model_name, config) 
+    # Save observations to file
+    if config.dataset.name == 'SKIRT_EPL':
+        save_path = config.skirt_epl_dataset.save_path
+    elif config.dataset.name == 'SKIRT_TNG':
+        save_path = config.skirt_tng_dataset.save_path
+    os.makedirs(save_path, exist_ok=True)
+    torch.save(y_all, os.path.join(save_path, 'observations_test.pt'))
+    print(f"Observations saved to {save_path}")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
