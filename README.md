@@ -20,25 +20,18 @@ This repository is published for transparency. It provides the source code and s
 
 ## Installation
 
-If you are setting this up from scratch, run the following before `pip install -e`:
-
 ```bash
+# Clone and enter the repository
 git clone https://github.com/GuillaumePayeur/DiRIM_Lensing
 cd DiRIM_Lensing
+
+# Create a python environment
 conda create -n dirim-lensing python=3.12 -y
 conda activate dirim-lensing
-```
 
-Install the package:
-
-```bash
-pip install -e .
-```
-
-Install package + script dependencies (recommended if you run anything in `scripts/`):
-
-```bash
-pip install -e ".[all]"
+# Install the package
+pip install -e . # package only
+pip install -e ".[all]" # package + script dependencies (recommended if you run anything in `scripts/`)
 ```
 
 ## Repository Structure
