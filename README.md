@@ -1,9 +1,8 @@
 # DiRIM_Lensing
 
-[![Paper: Coming Soon](https://img.shields.io/badge/paper-coming%20soon-lightgrey)](#paper-and-links)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-DiRIM_Lensing models strong gravitational lenses by combining denoising diffusion and recurrent inference machines in a single framework that allows sampling of the source and convergence map jointly as pixelated images for a given lens observation.
+DiRIM for lensing: Posterior sampling of source galaxy and foreground mass distribution as pixelated images in strong gravitational lensing using diffusion-based generative models and recurrent inference machines.
 
 **Authors:** Guillaume Payeur, Laurence Perreault-Levasseur, Gabriel Missael Barco, Yashar Hezaveh
 
@@ -11,15 +10,24 @@ DiRIM_Lensing models strong gravitational lenses by combining denoising diffusio
 
 ## Why This Repository Exists
 
-This repository is published primarily for research transparency. It provides the implementation used to run the experiments and produce results for the associated article.
+This repository is published for transparency. It provides the source code and scripts used to train and test our models.
 
 ## Paper and Links
 
-- **Paper title:** _Strong Gravitational Lensing Posterior Sampling in Pixel-Space Using Diffusion Models and Recurrent Inference Machines_
+- **Title:** _Strong Gravitational Lensing Posterior Sampling in Pixel-Space Using Diffusion Models and Recurrent Inference Machines_
 - **Preprint (arXiv):** _[TBA]_
 - **Journal / conference version:** _[TBA]_
 
 ## Installation
+
+If you are setting this up from scratch, run the following before `pip install -e`:
+
+```bash
+git clone https://github.com/GuillaumePayeur/DiRIM_Lensing
+cd DiRIM_Lensing
+conda create -n dirim-lensing python=3.12 -y
+conda activate dirim-lensing
+```
 
 Install the package:
 
@@ -28,12 +36,6 @@ pip install -e .
 ```
 
 Install package + script dependencies (recommended if you run anything in `scripts/`):
-
-```bash
-pip install -e ".[scripts]"
-```
-
-Install everything (scripts + dev tooling):
 
 ```bash
 pip install -e ".[all]"
@@ -50,7 +52,7 @@ pip install -e ".[all]"
 If you use this code in your research, please cite the corresponding article.
 
 ```bibtex
-@article{payeur2026dirim_lensing,
+@unpublished{payeur2026gravitational,
 	title   = {Strong Gravitational Lensing Posterior Sampling in Pixel-Space Using Diffusion Models and Recurrent Inference Machines},
 	author  = {Payeur, Guillaume and Perreault-Levasseur, Laurence and Barco, Gabriel Missael and Hezaveh, Yashar},
 	year    = {2026}
