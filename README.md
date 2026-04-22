@@ -28,6 +28,7 @@ cd DiRIM_Lensing
 # Create a python environment
 conda create -n dirim-lensing python=3.12 -y
 conda activate dirim-lensing
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia # GPU installation of PyTorch for Windows or Lunix
 
 # Install the package
 pip install -e . # package only
