@@ -1,1 +1,7 @@
 __pycache__
+demo_dataset.py
+figures_slides.py
+test_denoise.py
+test_ood_kappa.py
+test_ood_source.py
+test_sample.py

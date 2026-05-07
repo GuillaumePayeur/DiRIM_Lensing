@@ -53,7 +53,7 @@ def main(config):
     s_references = np.load(f'./results/tarp_samples/s_references_{model_name}.npy')
     k_references = np.load(f'./results/tarp_samples/k_references_{model_name}.npy')
 
-    # Normalize source and kappa with to one another
+    # Normalize source and kappa with respect to one another
     std_s = np.std(s_samples)
     std_k = np.std(k_samples)
     s_samples = s_samples / std_s
@@ -76,8 +76,6 @@ def main(config):
     references = np.concatenate((
         s_references.reshape(n_sims, res*res),
         k_references.reshape(n_sims, res*res)), axis=1)
-    
-    print(type(references))
     
     # Run TARP
     num_alpha_bins = config.tarp.num_alpha_bins
