@@ -10,7 +10,7 @@ DiRIM for lensing: Posterior sampling of source galaxy and foreground mass distr
 
 ## Why This Repository Exists
 
-This repository is published for transparency. It provides the source code and scripts used to train and test our models.
+This repository is published for transparency. It provides the source code and scripts used to train and test our models. The data used during training and test is also available on [Zenodo](https://zenodo.org/records/19668019)
 
 ## Paper and Links
 
